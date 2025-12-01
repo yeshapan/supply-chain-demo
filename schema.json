@@ -4,60 +4,162 @@
       "name": "supply_chain_sql",
       "type": "postgres",
       "metastore": {
-        "host": "postgres",
+        "host": "supply_chain_db",
         "port": 5432,
         "user": "admin",
         "password": "password",
-        "database": "supplychain"
+        "database": "supplychain",
+        "ssl": false
       }
     }
   ],
-  "vertices": [
-    {
-      "label": "Car",
-      "mapped_table": "supply_chain_sql.public.nodes_car_model",
-      "attributes": ["name", "year", "type"]
-    },
-    {
-      "label": "Feature",
-      "mapped_table": "supply_chain_sql.public.nodes_feature",
-      "attributes": ["name", "state"]
-    },
-    {
-      "label": "Part",
-      "mapped_table": "supply_chain_sql.public.nodes_part",
-      "attributes": ["name", "price"]
-    },
-    {
-      "label": "Supplier",
-      "mapped_table": "supply_chain_sql.public.nodes_supplier",
-      "attributes": ["name", "address"]
-    }
-  ],
-  "edges": [
-    {
-      "label": "has_feature",
-      "mapped_table": "supply_chain_sql.public.with_feature",
-      "from": "Car",
-      "to": "Feature",
-      "source_column": "src_node_id",
-      "target_column": "dst_node_id"
-    },
-    {
-      "label": "composed_of",
-      "mapped_table": "supply_chain_sql.public.is_composed_of",
-      "from": "Feature",
-      "to": "Part",
-      "source_column": "src_id",
-      "target_column": "dst_id"
-    },
-    {
-      "label": "supplied_by",
-      "mapped_table": "supply_chain_sql.public.is_supplied_by",
-      "from": "Part",
-      "to": "Supplier",
-      "source_column": "src_id",
-      "target_column": "dst_id"
-    }
-  ]
+  "graph": {
+    "vertices": [
+      {
+        "label": "Supplier",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "supply_chain_sql",
+            "schema": "public",
+            "table": "nodes_supplier"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "vertex_id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            { "type": "String", "field": "name", "alias": "name" },
+            { "type": "String", "field": "address", "alias": "address" }
+          ]
+        }
+      },
+      {
+        "label": "Car",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "supply_chain_sql",
+            "schema": "public",
+            "table": "nodes_car_model"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "vertex_id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            { "type": "String", "field": "name", "alias": "name" },
+            { "type": "Int", "field": "year", "alias": "year" }
+          ]
+        }
+      },
+      {
+        "label": "Part",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "supply_chain_sql",
+            "schema": "public",
+            "table": "nodes_part"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "vertex_id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            { "type": "String", "field": "name", "alias": "name" },
+            { "type": "Int", "field": "price", "alias": "price" }
+          ]
+        }
+      },
+      {
+        "label": "Feature",
+        "oneToOne": {
+          "tableSource": {
+            "catalog": "supply_chain_sql",
+            "schema": "public",
+            "table": "nodes_feature"
+          },
+          "id": {
+            "fields": [
+              {
+                "type": "String",
+                "field": "vertex_id",
+                "alias": "id"
+              }
+            ]
+          },
+          "attributes": [
+            { "type": "String", "field": "name", "alias": "name" },
+            { "type": "String", "field": "state", "alias": "state" }
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "label": "supplied_by",
+        "fromVertex": "Part",
+        "toVertex": "Supplier",
+        "tableSource": {
+          "catalog": "supply_chain_sql",
+          "schema": "public",
+          "table": "is_supplied_by"
+        },
+        "fromId": {
+          "fields": [{ "type": "String", "field": "src_id", "alias": "from_id" }]
+        },
+        "toId": {
+          "fields": [{ "type": "String", "field": "dst_id", "alias": "to_id" }]
+        },
+        "attributes": []
+      },
+      {
+        "label": "composed_of",
+        "fromVertex": "Feature",
+        "toVertex": "Part",
+        "tableSource": {
+          "catalog": "supply_chain_sql",
+          "schema": "public",
+          "table": "is_composed_of"
+        },
+        "fromId": {
+          "fields": [{ "type": "String", "field": "src_id", "alias": "from_id" }]
+        },
+        "toId": {
+          "fields": [{ "type": "String", "field": "dst_id", "alias": "to_id" }]
+        },
+        "attributes": []
+      },
+      {
+        "label": "has_feature",
+        "fromVertex": "Car",
+        "toVertex": "Feature",
+        "tableSource": {
+          "catalog": "supply_chain_sql",
+          "schema": "public",
+          "table": "with_feature"
+        },
+        "fromId": {
+          "fields": [{ "type": "String", "field": "src_node_id", "alias": "from_id" }]
+        },
+        "toId": {
+          "fields": [{ "type": "String", "field": "dst_node_id", "alias": "to_id" }]
+        },
+        "attributes": []
+      }
+    ]
+  }
 }
