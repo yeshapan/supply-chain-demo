@@ -1,0 +1,63 @@
+{
+  "catalogs": [
+    {
+      "name": "supply_chain_sql",
+      "type": "postgres",
+      "metastore": {
+        "host": "postgres",
+        "port": 5432,
+        "user": "admin",
+        "password": "password",
+        "database": "supplychain"
+      }
+    }
+  ],
+  "vertices": [
+    {
+      "label": "Car",
+      "mapped_table": "supply_chain_sql.public.nodes_car_model",
+      "attributes": ["name", "year", "type"]
+    },
+    {
+      "label": "Feature",
+      "mapped_table": "supply_chain_sql.public.nodes_feature",
+      "attributes": ["name", "state"]
+    },
+    {
+      "label": "Part",
+      "mapped_table": "supply_chain_sql.public.nodes_part",
+      "attributes": ["name", "price"]
+    },
+    {
+      "label": "Supplier",
+      "mapped_table": "supply_chain_sql.public.nodes_supplier",
+      "attributes": ["name", "address"]
+    }
+  ],
+  "edges": [
+    {
+      "label": "has_feature",
+      "mapped_table": "supply_chain_sql.public.with_feature",
+      "from": "Car",
+      "to": "Feature",
+      "source_column": "src_node_id",
+      "target_column": "dst_node_id"
+    },
+    {
+      "label": "composed_of",
+      "mapped_table": "supply_chain_sql.public.is_composed_of",
+      "from": "Feature",
+      "to": "Part",
+      "source_column": "src_id",
+      "target_column": "dst_id"
+    },
+    {
+      "label": "supplied_by",
+      "mapped_table": "supply_chain_sql.public.is_supplied_by",
+      "from": "Part",
+      "to": "Supplier",
+      "source_column": "src_id",
+      "target_column": "dst_id"
+    }
+  ]
+}
