@@ -25,6 +25,7 @@ services:
       - "8182:8182"  # Gremlin Port
     volumes:
       - ./schema.json:/etc/puppygraph/schema.json
+      - ./data:/data
     command: ["--config", "/etc/puppygraph/schema.json"]
     depends_on:
       - postgres
