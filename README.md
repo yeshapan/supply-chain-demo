@@ -31,7 +31,20 @@ g.V().has('Supplier', 'name', 'Supplier A')
   * And this complexity grows exponentially with each added layer of dependency
 * Graph can just walk the dependency chain
 
-#### **2. Identify "bottleneck" parts (Centrality)**
+#### **2. End-to-end Trace (Full Lineage)**
+
+Ques: Visually map the entire production path from raw material supplier to final car model
+```groovy
+g.V().has('Supplier', 'name', 'Supplier A')
+  .in('is_supplied_by')
+  .in('is_composed_of')
+  .in('with_feature')
+  .path()
+```
+* SQL would require a complex 4-table `JOIN`
+* Graph simply needs a 3-hop traversal to return full path
+
+#### **3. Identify "bottleneck" parts (Centrality)**
 
 Ques: Which parts aremost crucial? (Used by the most Features?)
 ```groovy
@@ -46,7 +59,7 @@ g.V().hasLabel('Part')
     * Slow process + locks up resources
 * We can calculate **degree centrality** directly on graph
 
-#### **3. True Cost Roll-up per feature**
+#### **4. True Cost Roll-up per feature**
 
 Ques: Calculate the total manufacturing cost of a specific feature (by summing prices of all it's raw parts)
 ```groovy
@@ -61,7 +74,7 @@ g.V().hasLabel('Feature')
 * We can simply traverse graph structure and use built-in sum() on price attribute
 
 
-#### **4. Single Point of Failure (SPOF) Audit**
+#### **5. Single Point of Failure (SPOF) Audit**
 
 Ques: Find names of Featuers relying on parts from *only one* supplier
 ```groovy
