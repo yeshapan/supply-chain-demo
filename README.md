@@ -15,7 +15,7 @@ The data remains consolidated in its original source while PuppyGraph overlays t
 * Real-Time Analysis: The PuppyGraph Engine uses the JDBC connection to execute Gremlin or Cypher traversals
   directly against the relational data (provides real-time analytics without data duplication)
 ---
-### **Examples of Analytical Use-cases (Gremlin Queries)**
+### **Examples of Analytical Use-cases (Gremlin and Cypher Queries)**
 
 #### **1. Supplier Failure Impact (Ripple Effect)**
 
@@ -27,6 +27,15 @@ g.V().has('Supplier', 'name', 'Supplier A')
   .in('with_feature')     //find Car Models those Features belong to
   .values('name').dedup()
 ```
+
+```cypher
+MATCH (s:Supplier {name: 'Supplier A'})
+MATCH (s)<-[:is_supplied_by]-(p)  //find Parts supplied by A
+MATCH (p)<-[:is_composed_of]-(f)  //find Features those Parts compose
+MATCH (f)<-[:with_feature]-(cm)   //find Car Models those Features belong to
+RETURN DISTINCT cm.name
+```
+
 * SQL would have required four-table `JOIN` for this
   * And this complexity grows exponentially with each added layer of dependency
 * Graph can just walk the dependency chain
@@ -41,6 +50,15 @@ g.V().has('Supplier', 'name', 'Supplier A')
   .in('with_feature')
   .path()
 ```
+
+```cypher
+MATCH path = (s:Supplier {name: 'Supplier A'})
+  <-[:is_supplied_by]-(p)
+  <-[:is_composed_of]-(f)
+  <-[:with_feature]-(cm)
+RETURN path
+```
+
 * SQL would require a complex 4-table `JOIN`
 * Graph simply needs a 3-hop traversal to return full path
 
@@ -54,6 +72,16 @@ g.V().hasLabel('Part')
     .by(__.in('is_composed_of').count())   //count incoming edges (Features)
   .order().by(select('ImpactedFeatures'), desc).limit(5)
 ```
+
+```cypher
+MATCH (p:Part)
+OPTIONAL MATCH (p)<-[:is_composed_of]-(f)
+RETURN p.name AS PartName, 
+       count(f) AS ImpactedFeatures   //count incoming edges (Features)
+ORDER BY ImpactedFeatures DESC
+LIMIT 5
+```
+
 * SQL would require heavy aggregation (`GROUP BY` and `COUNT`) across multuple joined tables
     * This forces DB to materialize large temporary tables
     * Slow process + locks up resources
@@ -69,6 +97,15 @@ g.V().hasLabel('Feature')
     .by(__.out('is_composed_of').values('price').sum())
   .order().by(select('TotalCost'), desc)
 ```
+
+```cypher
+MATCH (f:Feature)
+OPTIONAL MATCH (f)-[:is_composed_of]->(p)
+RETURN f.name AS Feature, 
+       sum(p.price) AS TotalCost
+ORDER BY TotalCost DESC
+```
+
 * If SQL query for summing across heirarchical joins is not written perfectly it can lead to "Cartesian product" problem
   * Can lead to duplicate counts (so incorrect financial metrics)
 * We can simply traverse graph structure and use built-in sum() on price attribute
@@ -83,6 +120,19 @@ g.V().hasLabel('Part')
   .in('is_composed_of')   //find Features that use these risky Parts
   .values('name').dedup()
 ```
+
+```cypher
+MATCH (p:Part)
+// Filter for Parts with exactly 1 supplier
+MATCH (p)-[:is_supplied_by]->(s)
+WITH p, count(s) AS supplier_count
+WHERE supplier_count = 1
+
+// Find Features that use these risky Parts
+MATCH (p)<-[:is_composed_of]-(f:Feature)
+RETURN DISTINCT f.name
+```
+
 * SQL needs complex conditional filtering:
     * group parts by supplier
     * filter for parts where supplier count is one `HAVING COUNT(supplier) = 1`
