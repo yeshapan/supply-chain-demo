@@ -159,10 +159,11 @@ ORDER BY TotalCost DESC
 * If SQL query for summing across heirarchical joins is not written perfectly it can lead to "Cartesian product" problem
   * Can lead to duplicate counts (so incorrect financial metrics)
 * We can simply traverse graph structure and use built-in sum() on price attribute
+---
 
 ### **Examples of some other visualizations (using Cypher queries)**
 
-#### **1. Model X-Ray (Full Bill of Materials)
+#### **1. Model X-Ray (Full Bill of Materials)**
 Goal: Visually explode a single car model into its entire component tree (Car → Features → Parts → Suppliers)
 ```cypher
 MATCH path = (cm:CarModel {name: 'Model A'})
@@ -173,7 +174,7 @@ RETURN path
 ```
 This visualizes supply chain depth
 
-#### **Shared Parts Analysis ("butterfly" graph)** 
+#### **2. Shared Parts Analysis ("butterfly" graph)** 
 Goal: Discover parts that are shared between two different Car Models
 ```cypher
 MATCH path = (cm1:CarModel)-[:with_feature]->(f1)-[:is_composed_of]->(p:Part)
